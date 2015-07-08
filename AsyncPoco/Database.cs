@@ -1212,7 +1212,7 @@ namespace AsyncPoco
 		/// <remarks>Inserts a poco into a table.  If the poco has a property with the same name 
 		/// as the primary key the id of the new record is assigned to it.  Either way,
 		/// the new id is returned.</remarks>
-		public virtual async Task<object> InsertAsync(string tableName, string primaryKeyName, bool autoIncrement, object poco)
+		public virtual async Task<object> InsertAsync(string tableName, string primaryKeyName, bool autoIncrement, object poco, IEnumerable<string> columns = null)
 		{
 			try
 			{
@@ -1225,9 +1225,25 @@ namespace AsyncPoco
 						var names = new List<string>();
 						var values = new List<string>();
 						var index = 0;
-						foreach (var i in pd.Columns)
+
+                        string[] arrColumns = null;
+					    if (columns != null)
+					    {
+					        arrColumns = columns as string[] ?? columns.ToArray();
+					    }
+
+					    foreach (var i in pd.Columns)
 						{
-							// Don't insert result columns
+                            // User Specified Columns
+                            if (arrColumns != null)
+						    {
+                                if (!arrColumns.Contains(i.Key) && i.Key != primaryKeyName)
+						        {
+						            continue;
+						        }
+						    }
+
+						    // Don't insert result columns
 							if (i.Value.ResultColumn)
 								continue;
 
@@ -1323,6 +1339,11 @@ namespace AsyncPoco
 			return InsertAsync(pd.TableInfo.TableName, pd.TableInfo.PrimaryKey, pd.TableInfo.AutoIncrement, poco);
 		}
 
+        public Task<object> InsertAsync(object poco, IEnumerable<string> columns)
+        {
+            var pd = PocoData.ForType(poco.GetType());
+            return InsertAsync(pd.TableInfo.TableName, pd.TableInfo.PrimaryKey, pd.TableInfo.AutoIncrement, poco, columns);
+        }
 		#endregion
 
 		#region operation: Update
@@ -1362,6 +1383,8 @@ namespace AsyncPoco
 						var sb = new StringBuilder();
 						var index = 0;
 						var pd = PocoData.ForObject(poco,primaryKeyName);
+
+                        // Grab primary key value
 						var primaryKeyValuePairs = GetPrimaryKeyValues(primaryKeyName, primaryKeyValue);
 
 						if (columns == null)
@@ -1394,6 +1417,15 @@ namespace AsyncPoco
 						}
 						else
 						{
+                            // re-Grab primary key value
+						    foreach (var pkey in primaryKeyValuePairs.Keys.ToArray())
+						    {
+                                if (primaryKeyValue == null)
+                                {
+                                    primaryKeyValuePairs[pkey] = pd.Columns[pkey].GetValue(poco);
+                                }
+						    }
+
 							foreach (var colname in columns)
 							{
 								var pc = pd.Columns[colname];
@@ -1413,6 +1445,7 @@ namespace AsyncPoco
 							sb, 
 							BuildPrimaryKeySql(primaryKeyValuePairs, ref index));
 
+                        // primary keys
 						foreach (var keyValue in primaryKeyValuePairs) {
 							var pi = pd.Columns.ContainsKey(keyValue.Key) ? pd.Columns[keyValue.Key].PropertyInfo : null;
 							AddParam(cmd, keyValue.Value, pi);
