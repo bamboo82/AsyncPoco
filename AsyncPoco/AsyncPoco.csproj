@@ -1,16 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{33699753-151D-4100-8F12-9AE1AEB5C5BD}</ProjectGuid>
+    <ProjectGuid>{639EB75F-09B4-4865-AB77-0CD75939F75C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AsyncPoco</RootNamespace>
     <AssemblyName>AsyncPoco</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -54,6 +54,54 @@
     <Prefer32Bit>false</Prefer32Bit>
     <DocumentationFile>bin\Release\AsyncPoco.xml</DocumentationFile>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-mfpKeeper Only|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug-mfpKeeper Only\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug_mfpKeeper|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug_mfpKeeper\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-WokerProject|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug-WokerProject\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-workerConfig|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug-workerConfig\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'CMSWebConsole-Only|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\CMSWebConsole-Only\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
@@ -62,6 +110,28 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attributes\DescriptionAttribute.cs" />
+    <Compile Include="Attributes\Special\CustomizedTypeAttribute.cs" />
+    <Compile Include="Attributes\Special\FileTypeAttribute.cs" />
+    <Compile Include="Attributes\Special\MemoAttribute.cs" />
+    <Compile Include="Attributes\Special\ComboAttribute.cs" />
+    <Compile Include="Attributes\Special\MultiReferenceToAttribute.cs" />
+    <Compile Include="Attributes\Special\DateTypeAttribute.cs" />
+    <Compile Include="Attributes\Special\ReferenceToPassiveAttribute.cs" />
+    <Compile Include="Attributes\Special\TableShowField.cs" />
+    <Compile Include="Attributes\Special\TableShowAll.cs" />
+    <Compile Include="Attributes\Special\TableHideAll.cs" />
+    <Compile Include="Attributes\Special\TableHideField.cs" />
+    <Compile Include="Attributes\Special\ReadonlyAttribute.cs" />
+    <Compile Include="Attributes\Special\QuickSearchableGroupAttribute.cs" />
+    <Compile Include="Attributes\Special\OrderableAttribute.cs" />
+    <Compile Include="Attributes\Special\SearchableGroupAttribute.cs" />
+    <Compile Include="Attributes\Special\SuggestableAttribute.cs" />
+    <Compile Include="Attributes\Special\ReferenceToAttribute.cs" />
+    <Compile Include="Attributes\Special\ReferenceByAttribute.cs" />
+    <Compile Include="Attributes\Special\RequiredAttribute.cs" />
+    <Compile Include="Attributes\Special\ComboOptionAttribute.cs" />
+    <Compile Include="Attributes\MaxLengthAttribute.cs" />
     <Compile Include="Attributes\ColumnAttribute.cs" />
     <Compile Include="Attributes\ComputedColumnAttribute.cs" />
     <Compile Include="Core\AnsiString.cs" />
@@ -76,6 +146,9 @@
     <Compile Include="DatabaseTypes\SqlServerDatabaseType.cs" />
     <Compile Include="DatabaseTypes\SqlServerCEDatabaseType.cs" />
     <Compile Include="DatabaseTypes\MySqlDatabaseType.cs" />
+    <Compile Include="Exceptions\ExceedMaxLengthException.cs" />
+    <Compile Include="HashCodeCombiner.cs" />
+    <Compile Include="MultiResultSet\GridReader.cs" />
     <Compile Include="Utilities\AutoSelectHelper.cs" />
     <Compile Include="Utilities\PagingHelper.cs" />
     <Compile Include="Utilities\ParametersHelper.cs" />
@@ -117,8 +190,8 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>cd $(ProjectDir)
-PostBuild.bat $(ConfigurationName)</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
