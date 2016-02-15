@@ -4,10 +4,6 @@
 
 AsyncPoco is a fork of the popular [PetaPoco](http://www.toptensoftware.com/petapoco) micro-ORM for .NET, with a fully asynchronous API and support for the async/await keywords in C# 5.0 and VB 11. It does not supercede PetaPoco; the two can peacefully co-exist in the same project. When making the decision to go asynchronous, it's generally best to go "all in", but keeping both around can be helpful while making a gradual transition.
 
-## My words
-
-I maintain this for my own use. Most coding are optimized with runtime speed in mind when I have enough time. However I only use this for MySQL and SQL Server. The rest are untested, unmaintained.
-
 ## Credit where credit is due
 
 Refer to tmenier:master Credit section. 
