@@ -11,7 +11,7 @@ This project is forked from https://github.com/tmenier/AsyncPoco in 2016
 .NET Framework 4.8
 
 ## Is it faster?
-Yes if you use multiple threads for tasks.
+Perhaps, you can spawn multiple thread and use async Task queue.
 
 ## Fork Improvements
 Instead of using "DBContext.query," it now allows the alternative "entity.Save(DB context)" syntax for snap-in transaction. DB contexts are created and shared across threads via ".GetInstance()". If a transaction is needed, you should create a non-shared context using "new DBContext()" and manage its lifespan.
@@ -21,4 +21,4 @@ Instead of using "DBContext.query," it now allows the alternative "entity.Save(D
 
 ## Recommend usage and precaution.
 1. Don't use combo primary-keys. (support is complex and weak)
-2. Read context is free to be shared. Each thread manage its own shared context. Keep writing context to yourself and don't share it through async Task preferably with mini-"using" here and there. If you need transaction/write across Tasks, create a dedicated new context for it.
+2. Each thread manage its own shared context. Read/write may happen at shared context. If you need transaction, create a dedicated new context for it.
