@@ -1,0 +1,23 @@
+﻿<#@ include file="AsyncPoco.Core.ttinclude" #>
+<#
+	// Settings
+    ConnectionStringName = "HEADLINE";			// Uses last connection string in config if not specified
+    Namespace = "CMSWeb.DB.HEADLINE";
+    RepoName = "HEADLINE_DB";
+    GenerateOperations = true;
+	GeneratePocos = true;
+	GenerateCommon = true;
+	ClassPrefix = "";
+	ClassSuffix = "";
+	TrackModifiedColumns = true;
+
+    // Read schema
+	var tables = LoadTables();
+#>
+<#
+if (string.IsNullOrEmpty(Namespace)) Namespace=ConnectionStringName;
+if (string.IsNullOrEmpty(RepoName) && !string.IsNullOrEmpty(ConnectionStringName)) RepoName=ConnectionStringName + "DB";
+if (string.IsNullOrEmpty(Namespace)) Namespace="AsyncPoco";
+if (string.IsNullOrEmpty(RepoName)) RepoName="AsyncPocoDB";
+#>
+<#@ include file="StoredProcedures.Generator.ttinclude" #>
