@@ -11,6 +11,12 @@ using System.Threading.Tasks;
 using System.Web;
 using AsyncPoco;
 
+/*
+using System.Reflection;
+using Bamboo.BSTL.Extension;
+using Bamboo.BSTL.Utils;
+*/
+
 namespace <#=Namespace #>
 {
 <# if (GenerateCommon) { #>
@@ -58,11 +64,12 @@ namespace <#=Namespace #>
 		}
         
 <# if (GenerateOperations) { #>
+		[Serializable]
 		public class Record<T> where T:new()
 		{
 			public static <#=RepoName#> repo { get { return <#=RepoName#>.GetInstance(); } }
 			public bool IsNew() { return repo.IsNew(this); }
-			public Task<object> InsertAsync() { return repo.InsertAsync(this); }
+			//public Task<object> InsertAsync() { return repo.InsertAsync(this); }
 <# if (!TrackModifiedColumns) { #>
 			public Task SaveAsync() { return repo.SaveAsync(this); }
 			public Task<int> UpdateAsync() { return repo.UpdateAsync(this); }
@@ -100,9 +107,10 @@ namespace <#=Namespace #>
 			public static Task QueryAsync(string sql, Func<T, bool> func) { return repo.QueryAsync<T>(sql, func); }
 			public static Task QueryAsync(Sql sql, Action<T> action) { return repo.QueryAsync<T>(sql, action); }
 			public static Task QueryAsync(Sql sql, Func<T, bool> func) { return repo.QueryAsync<T>(sql, func); }
-<# if (TrackModifiedColumns) { #>			
+		
 			private Dictionary<string,bool> ModifiedColumns;
-			private void OnLoaded()
+
+			public void OnLoaded()
 			{
 				ModifiedColumns = new Dictionary<string,bool>();
 			}
@@ -111,23 +119,134 @@ namespace <#=Namespace #>
 				if (ModifiedColumns!=null)
 					ModifiedColumns[column_name]=true;
 			}
-			public async Task<int> UpdateAsync() 
-			{ 
-				if (ModifiedColumns==null)
-					return await repo.UpdateAsync(this); 
 
-				int retv = await repo.UpdateAsync(this, ModifiedColumns.Keys);
-				ModifiedColumns.Clear();
-				return retv;
+			/*
+			public async void ReloadAsync()
+            {
+                var pkAttr = (PrimaryKeyAttribute)typeof(T).GetCustomAttribute(typeof(PrimaryKeyAttribute), false);
+                if (pkAttr == null)
+                {
+                    throw new Exception("no pk defined");
+                }
+
+                T reloaded = await repo.SingleAsync<T>(this.GetValue(pkAttr.Value));
+
+                var columnsExceptPk = typeof(T).GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(ColumnAttribute))).Where(r => pkAttr.Value != r.Name);
+                foreach (var prop in columnsExceptPk)
+                {
+                    if (reloaded.GetType().GetProperty(prop.Name, ReflectionUtil.MemberAccess) != null)
+                        ReflectionUtil.SetProperty(this, prop.Name, prop.GetValue(reloaded));
+                }
+            }
+
+            public async void ReloadAsync(Database repo)
+            {
+                var pkAttr = (PrimaryKeyAttribute)typeof(T).GetCustomAttribute(typeof(PrimaryKeyAttribute), false);
+                if (pkAttr == null)
+                {
+                    throw new Exception("no pk defined");
+                }
+
+                T reloaded = await repo.SingleAsync<T>(this.GetValue(pkAttr.Value));
+
+                var columnsExceptPk = typeof(T).GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(ColumnAttribute))).Where(r => pkAttr.Value != r.Name);
+                foreach (var prop in columnsExceptPk)
+                {
+                    if (reloaded.GetType().GetProperty(prop.Name, ReflectionUtil.MemberAccess) != null)
+                        ReflectionUtil.SetProperty(this, prop.Name, prop.GetValue(reloaded));
+                }
+            }
+			*/
+
+            public async Task<object> InsertAsync()
+            {
+				return await this.InsertAsync(repo);
 			}
-			public Task SaveAsync() 
-			{ 
-				if (repo.IsNew(this))
-					return repo.InsertAsync(this);
-				else
-					return UpdateAsync();
+
+			public async Task<int> DeleteAsync(Database repo)
+            {
+				var ret = await repo.DeleteAsync(this);
+				return ret;
 			}
-<# } #>
+
+            public async Task<object> InsertAsync(Database repo)
+            {
+                if (ModifiedColumns != null)
+                {
+                    //VERSION 1: with change tracking
+                    var ret = await repo.InsertAsync(this, ModifiedColumns.Keys);
+                    ModifiedColumns.Clear();
+                    return ret;
+                }
+                else
+                {
+					//VERSION 2: no change tracking
+					return await repo.InsertAsync(this);
+                }
+			}
+
+			public async Task<int> UpdateAsync()
+            {
+                return await this.UpdateAsync(repo);
+            }
+
+			public async Task<int> UpdateAsync(Database repo)
+            {
+                if (ModifiedColumns != null)
+                {
+                    //VERSION 1: with change tracking
+                    if (ModifiedColumns.Any())
+                    {
+                        var ret = await repo.UpdateAsync(this, ModifiedColumns.Keys);
+                        ModifiedColumns.Clear();
+                        return ret;
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                }
+                else
+                {
+					//VERSION 2: no change tracking
+                    return await repo.UpdateAsync(this);
+                }
+            }
+
+            public async Task<object> SaveAsync()
+            {
+				return await this.SaveAsync(repo);
+			}
+
+            public async Task<object> SaveAsync(Database repo)
+            {
+                if (ModifiedColumns != null)
+                {
+                    //VERSION 1: with change tracking
+                    if (repo.IsNew(this))
+                    {
+                        var ret = await repo.InsertAsync(this, ModifiedColumns.Keys);
+                        ModifiedColumns.Clear();
+                        return ret;
+                    }
+                    else
+                    {
+                        return await UpdateAsync(repo);
+                    }
+                }
+                else
+                {
+					//VERSION 2: no change tracking
+                    if (repo.IsNew(this))
+                    {
+                        return await repo.InsertAsync(this);
+                    }
+                    else
+                    {
+                        return await UpdateAsync(repo);
+                    }
+                }
+			}
 		}
 <# } #>
 	}
@@ -137,8 +256,22 @@ namespace <#=Namespace #>
 <#
 foreach(Table tbl in from t in tables where !t.Ignore select t)
 {
+		/* Extract to descKeyValues */
+		// example:  string sx = "a:abc,b:abc";
+		Dictionary<string, string> tableDescKeyValues = new Dictionary<string, string>();
+
+		{
+			var items = (tbl.Description ?? "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+			foreach (var item in items)
+			{
+				var its = item.Split(new[] { ':' });
+				if (its.Count() == 2) {
+					tableDescKeyValues.Add(its[0], its[1]);
+				}
+			}
+		}
 #>
-    
+	[Serializable]
 	[TableName("<#=tbl.Name#>")]
 <# if (tbl.PK!=null && tbl.PK.IsAutoIncrement) { #>
 <# if (tbl.SequenceName==null) { #>
@@ -150,19 +283,99 @@ foreach(Table tbl in from t in tables where !t.Ignore select t)
 <# if (tbl.PK!=null && !tbl.PK.IsAutoIncrement) { #>
 	[PrimaryKey("<#=tbl.PK.Name#>", autoIncrement=false)]
 <# } #>
+<# if (tbl.Description!=null) { #>
+	[Description("<#=tbl.Description#>")] 
+<# } #>
 	[ExplicitColumns]
+	[System.ComponentModel.DataAnnotations.MetadataType(typeof(<#=tbl.ClassName#>.Metadata))]
+
+<# 
+	if (tableDescKeyValues.ContainsKey("Inherit")) {
+#>
+    public partial class <#=tbl.ClassName#> <# if (GenerateOperations) { #>: <#=tableDescKeyValues["Inherit"]#><# } #> 
+    {
+<#
+	} else {
+#>
     public partial class <#=tbl.ClassName#> <# if (GenerateOperations) { #>: <#=RepoName#>.Record<<#=tbl.ClassName#>> <# } #> 
     {
+<# } 
+#>
+/* Metadata definition hint
+
+<#
+foreach(Column col in from c in tbl.Columns where !c.Ignore select c)
+{
+		// Column bindings
+
+		/* Extract to descKeyValues */
+		// example:  string sx = "a:abc,b:abc";
+		Dictionary<string, string> colDescKeyValues = new Dictionary<string, string>();
+		{
+			var items = (col.Description ?? "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+			foreach (var item in items)
+			{
+				var its = item.Split(new[] { ':' });
+				if (its.Count() == 2) {
+					colDescKeyValues.Add(its[0], its[1]);
+				}
+			}
+		}
+#>
+		public <#=col.PropertyType #><#=CheckNullable(col)#> <#=col.PropertyName #> { get; }
+
+<# } #>
+*/
+
+<# if (TrackModifiedColumns) { #>
+		public <#=tbl.ClassName#>() {
+<# if (TrackModifiedColumns) { #>	
+			OnLoaded();
+<# } #>	
+		}
+
+<# } #>
+		public partial class Metadata
+        {
+        }
+
+
+        public static string GetTableName()
+        {
+			return typeof(<#=tbl.ClassName#>).GetCustomAttributes(typeof(TableNameAttribute), true).Cast<TableNameAttribute>().FirstOrDefault()?.Value;
+        }
+
 <#
 foreach(Column col in from c in tbl.Columns where !c.Ignore select c)
 {
 		// Column bindings
 #>
+
+
+
 <# if (TrackModifiedColumns) { #>
-<# if (col.Name!=col.PropertyName) { #>
-        [Column("<#=col.Name#>")] 
+<# if (col.IsComputed) { #>
+        [ResultColumn] 
+		<# if (col.Name!=col.PropertyName) { #>
+		[ComputedColumn("<#=col.Name#>")] 
+		<# } else { #>
+		[ComputedColumn] 
+		<# } #>
 <# } else { #>
-        [Column] 
+<# if (col.Name!=col.PropertyName) { #>
+		[Column("<#=col.Name#>")] 
+<# } else { #>
+		[Column] 
+<# } #>
+<# } #>
+<# if (col.MaxLength != null) { #>
+        [MaxLength("<#=col.MaxLength #>")] 
+<# } else { #>
+<# } #>
+<# if (col.Description != null) { #>
+        [Description("<#=col.Description#>")] 
+<# } else { #>
 <# } #>
 		public <#=col.PropertyType #><#=CheckNullable(col)#> <#=col.PropertyName #> 
 		{ 
@@ -186,6 +399,91 @@ foreach(Column col in from c in tbl.Columns where !c.Ignore select c)
 <# } #>
 <# } #>
 <# } #>
+
+<# if (tbl.PK!=null) { #>
+		public static async Task<<#=tbl.Name#>> Get_Item_ByKey(<#=RepoName#> db, dynamic key, bool NOLOCK=false, string CUSTOMWITH=null)
+        {
+            if (db == null)
+            {
+                using (db = <#=RepoName#>.GetInstance())
+                {
+                    return await InnerMethod(db).ConfigureAwait(false);
+                }
+            }
+            else
+            {
+                return await InnerMethod(db).ConfigureAwait(false);
+            }
+
+
+            async Task<<#=tbl.Name#>> InnerMethod(<#=RepoName#> db_)
+            {
+                LOCAL_RETRY:
+                #region Query   
+
+                var query = Sql.Builder;
+                query.Append(
+                    $@"SELECT TT1.* 
+                        FROM [<#=tbl.Name#>] AS TT1 {(NOLOCK ? "WITH (NOLOCK)" : "")} {(CUSTOMWITH != null ? CUSTOMWITH : "")} 
+                        WHERE 1=1");
+
+                query.Append($" AND TT1.[<#=tbl.PK.Name#>]=@0", key);
+                query.Append($" ORDER BY TT1.[<#=tbl.PK.Name#>] ASC");
+                #endregion
+
+                //using (var db = <#=tbl.Name#>.GetInstance())
+                {
+                    var rows = await db_.FetchAsync<<#=tbl.Name#>>(query).ConfigureAwait(false);
+                    var it = rows.FirstOrDefault();
+
+                    return it;
+                }
+            }
+        }
+<# } #>
+
+<# if (tbl.PK!=null) { #>
+		public static async Task<<#=tbl.Name#>[]> Get_List(<#=RepoName#> db, bool NOLOCK=false, string CUSTOMWITH=null)
+        {
+            if (db == null)
+            {
+                using (db = <#=RepoName#>.GetInstance())
+                {
+                    return await InnerMethod(db).ConfigureAwait(false);
+                }
+            }
+            else
+            {
+                return await InnerMethod(db).ConfigureAwait(false);
+            }
+
+
+            async Task<<#=tbl.Name#>[]> InnerMethod(<#=RepoName#> db_)
+            {
+                LOCAL_RETRY:
+                #region Query   
+
+                var query = Sql.Builder;
+                query.Append(
+                    $@"SELECT TT1.* 
+                        FROM [<#=tbl.Name#>] AS TT1 {(NOLOCK ? "WITH (NOLOCK)" : "")} {(CUSTOMWITH != null ? CUSTOMWITH : "")} 
+                        WHERE 1=1");
+
+                query.Append($" ORDER BY TT1.[<#=tbl.PK.Name#>] ASC");
+                #endregion
+
+                //using (var db = <#=tbl.Name#>.GetInstance())
+                {
+                    var rows = await db_.FetchAsync<<#=tbl.Name#>>(query).ConfigureAwait(false);
+                    var its = rows.ToArray(); 
+
+                    return its;
+                }
+            }
+        }
+<# } #>
+        
+
 	}
 <# } #>
 <# } #>

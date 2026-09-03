@@ -118,9 +118,24 @@ namespace AsyncPoco
             EnableAutoSelect = true;
             EnableNamedParams = true;
 
-            // If a provider name was supplied, get the DbProviderFactory for it
+            // If a provider name was supplied, get the DbProviderFactory for it.
+            // NOTE (.NET Core / .NET 5+): DbProviderFactories has no registered providers by default.
+            // The host must call DbProviderFactories.RegisterFactory(providerName, factory) at startup,
+            // or use the Database(string, DbProviderFactory) / Database(DbConnection) constructors instead.
             if (_providerName != null)
-                _factory = DbProviderFactories.GetFactory(_providerName);
+            {
+                try
+                {
+                    _factory = DbProviderFactories.GetFactory(_providerName);
+                }
+                catch (ArgumentException ex)
+                {
+                    throw new InvalidOperationException(
+                        "No DbProviderFactory is registered for provider '" + _providerName + "'. " +
+                        "On .NET Core/.NET 5+ call DbProviderFactories.RegisterFactory(\"" + _providerName + "\", <factory>) at startup, " +
+                        "or construct Database with a DbProviderFactory or an open DbConnection.", ex);
+                }
+            }
 
             // Resolve the DB Type
             string DBTypeName = (_factory == null ? _sharedConnection.GetType() : _factory.GetType()).Name;

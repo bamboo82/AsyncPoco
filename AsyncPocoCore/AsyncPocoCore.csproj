@@ -1,55 +1,34 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    AsyncPocoCore: the .NET 9 build of AsyncPoco.
+    Source files are a mirror of ../AsyncPoco (net48). See docs/PORTING-NET9.md for the sync procedure.
+  -->
+
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <TargetFramework>net9.0</TargetFramework>
     <OutputType>Library</OutputType>
+    <AssemblyName>AsyncPoco</AssemblyName>
+    <RootNamespace>AsyncPoco</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <!-- Properties/AssemblyInfo.cs carries the version; keep it authoritative for both builds. -->
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <!-- Linq/ is legacy and excluded on the net48 side too; keep it out of the net9 build if it ever gets copied in. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);Linq\**;AsyncPoco.cs</DefaultItemExcludes>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <CodeAnalysisLogFile>bin\Debug\AsyncPoco.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
-    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
-    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
-    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <CodeAnalysisLogFile>bin\Release\AsyncPoco.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
-    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
-    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
-    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <DocumentationFile>bin\Release\AsyncPoco.xml</DocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-mfpKeeper Only|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Debug-mfpKeeper Only\</OutputPath>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug_mfpKeeper|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Debug_mfpKeeper\</OutputPath>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-WokerProject|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Debug-WokerProject\</OutputPath>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-workerConfig|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Debug-workerConfig\</OutputPath>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'CMSWebConsole-Only|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\CMSWebConsole-Only\</OutputPath>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ConfigurationManager.ConnectionStrings support for Database(string connectionStringName). -->
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.0" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Update="AsyncPoco.nuspec">
       <SubType>Designer</SubType>
@@ -57,35 +36,9 @@
     <None Update="T4 Templates\Database.tt">
       <LastGenOutput>Database.cs</LastGenOutput>
     </None>
+    <None Update="T4 Templates\StoredProcedures.tt">
+      <LastGenOutput>StoredProcedures.cs</LastGenOutput>
+    </None>
   </ItemGroup>
-  <ItemGroup>
-    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="AsyncPoco.cs" />
-    <Compile Remove="Linq\ComplexSqlBuilder.cs" />
-    <Compile Remove="Linq\DeleteQueryProvider.cs" />
-    <Compile Remove="Linq\Expressions\DefaultSqlExpression.cs" />
-    <Compile Remove="Linq\Expressions\ExpressionVisitor.cs" />
-    <Compile Remove="Linq\Expressions\FirebirdSqlExpression.cs" />
-    <Compile Remove="Linq\Expressions\ParameterRebinder.cs" />
-    <Compile Remove="Linq\Expressions\PartialEvaluator.cs" />
-    <Compile Remove="Linq\Expressions\PredicateBuilder.cs" />
-    <Compile Remove="Linq\Expressions\S.cs" />
-    <Compile Remove="Linq\Expressions\SqlExpression.cs" />
-    <Compile Remove="Linq\ISimpleQueryProviderExpression.cs" />
-    <Compile Remove="Linq\JoinData.cs" />
-    <Compile Remove="Linq\SimpleQueryProvider.cs" />
-    <Compile Remove="Linq\UpdateQueryProvider.cs" />
-  </ItemGroup>
-  <PropertyGroup />
-  <ItemGroup>
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
-    <PackageReference Include="Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers" Version="0.4.410601">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
-    <PackageReference Include="System.Reflection.Emit.ILGeneration" Version="4.7.0" />
-    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
-  </ItemGroup>
+
 </Project>
