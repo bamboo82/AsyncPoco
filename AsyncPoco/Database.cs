@@ -2045,6 +2045,7 @@ namespace AsyncPoco
         /// <param name="cb">A callback function to connect the POCO instances, or null to automatically guess the relationships</param>
         /// <param name="sql">An SQL builder object representing the query and it's arguments</param>
         /// <returns>A collection of POCO's as a List</returns>
+        public Task<List<TRet>> FetchAsync<T1, TRet>(Func<T1, TRet> cb, Sql sql) { return FetchAsync<TRet>(new[] { typeof(T1) }, cb, sql.SQL, sql.Arguments); }
         public Task<List<TRet>> FetchAsync<T1, T2, TRet>(Func<T1, T2, TRet> cb, Sql sql) { return FetchAsync<TRet>(new[] { typeof(T1), typeof(T2) }, cb, sql.SQL, sql.Arguments); }
         public Task<List<TRet>> FetchAsync<T1, T2, T3, TRet>(Func<T1, T2, T3, TRet> cb, Sql sql) { return FetchAsync<TRet>(new[] { typeof(T1), typeof(T2), typeof(T3) }, cb, sql.SQL, sql.Arguments); }
         public Task<List<TRet>> FetchAsync<T1, T2, T3, T4, TRet>(Func<T1, T2, T3, T4, TRet> cb, Sql sql) { return FetchAsync<TRet>(new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4) }, cb, sql.SQL, sql.Arguments); }
