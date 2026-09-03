@@ -1,0 +1,5 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# shell 腳本要在 WSL/Ubuntu 跑，CRLF 會讓 bash 直接炸；鎖 LF
+*.sh text eol=lf

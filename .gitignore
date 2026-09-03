@@ -1,8 +1,27 @@
-bin
-obj
+# VS / ReSharper 個人設定與暫存
+*.user
+*.lock
+*.cache
+*.log
+/build/
+_ReSharper.BSTL/
+
+[Bb]in/
+[Oo]bj/
 *.suo
 *.nupkg
 packages
 csj/csj.exe
 csj/csj.pdb
 .nuget
+
+# 原有規則：所有 . 開頭的檔案與目錄一律忽略。
+# 因為這條，未來要新增 .editorconfig / .claude/ 之類的檔案必須先在下面開例外，
+# 否則 git add 會靜默失敗（這是踩過的坑，不是理論）。
+.*/
+.*
+!.gitignore
+!.gitattributes
+!.editorconfig
+!.claude/
+

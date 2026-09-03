@@ -1,15 +1,16 @@
-<#@ include file="AsyncPoco.Core.ttinclude" #>
+﻿<#@ include file="AsyncPoco.Core.ttinclude" #>
 <#
 	// Settings
-    ConnectionStringName = "";			// Uses last connection string in config if not specified
-    Namespace = "";
-    RepoName = "";
+    ConnectionStringName = "HEADLINE";			// Uses last connection string in config if not specified
+    Namespace = "CMSWeb.DB.HEADLINE";
+    RepoName = "HEADLINE_DB";
     GenerateOperations = true;
 	GeneratePocos = true;
 	GenerateCommon = true;
 	ClassPrefix = "";
 	ClassSuffix = "";
-	TrackModifiedColumns = false;
+	TrackModifiedColumns = true;
+	IncludeViews = true;
 
     // Read schema
 	var tables = LoadTables();
@@ -23,6 +24,10 @@
 	tables["tablename"]["columnname"].PropertyName="newname";	// To change the property name of a column
 	tables["tablename"]["columnname"].PropertyType="bool";		// To change the property type of a column
 */
+
+	tables["vw_公開文章檢舉"].KeyColumnName = "檢舉Id";
+	tables["vw_公開文章留言檢舉"].KeyColumnName = "檢舉Id";
+	tables["vw_號__會員信箱"].KeyColumnName = "號Id";
 
 	// Generate output
 	if (tables.Count>0)

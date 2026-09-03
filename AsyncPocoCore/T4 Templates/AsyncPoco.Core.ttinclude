@@ -102,11 +102,18 @@ public class Table
     public string ClassName;
 	public string SequenceName;
 	public bool Ignore;
+	public string Description;
+
+	public string KeyColumnName = null;
+
 
     public Column PK
     {
         get
         {
+			if (KeyColumnName != null) {
+				return this.Columns.Single(x=>string.Compare(x.Name, KeyColumnName, true)==0);
+			}
             return this.Columns.SingleOrDefault(x=>x.IsPK);
         }
     }
@@ -134,7 +141,11 @@ public class Column
     public bool IsPK;
     public bool IsNullable;
 	public bool IsAutoIncrement;
+	public bool IsComputed;
 	public bool Ignore;
+	public string MaxLength;
+	public string Description;
+	
 }
 
 public class Tables : List<Table>
@@ -175,9 +186,10 @@ static Func<string, string> CleanUp = (str) =>
 {
 	str = rxCleanUp.Replace(str, "_");
 
-	if (char.IsDigit(str[0]) || cs_keywords.Contains(str))
+	if (cs_keywords.Contains(str))
 		str = "@" + str;
-	
+	if (char.IsDigit(str[0]))
+		str = "_" + str;
     return str;
 };
 
@@ -493,7 +505,8 @@ class SqlServerSchemaReader : SchemaReader
 					tbl.Schema=rdr["TABLE_SCHEMA"].ToString();
 					tbl.IsView=string.Compare(rdr["TABLE_TYPE"].ToString(), "View", true)==0;
 					tbl.CleanName=CleanUp(tbl.Name);
-					tbl.ClassName=Inflector.MakeSingular(tbl.CleanName);
+					//tbl.ClassName=Inflector.MakeSingular(tbl.CleanName);
+					tbl.ClassName=tbl.CleanName;
 
 					result.Add(tbl);
 				}
@@ -548,6 +561,24 @@ class SqlServerSchemaReader : SchemaReader
 					col.Name=rdr["ColumnName"].ToString();
 					col.PropertyName=CleanUp(col.Name);
 					col.PropertyType=GetPropertyType(rdr["DataType"].ToString());
+					col.MaxLength=null;
+                    {
+						if (rdr["DataType"].ToString() == "nvarchar" || rdr["DataType"].ToString() == "varchar") {
+							var maxLength = rdr["MaxLength"].ToString();
+							if (maxLength != "NULL" &&  maxLength != "-1") {
+								try {
+									col.MaxLength = int.Parse(maxLength).ToString();
+								} catch(Exception e) {}
+							}
+                        }
+                    }
+					col.Description = null;
+                    {
+						if (rdr["Description"].ToString() != "") {
+							col.Description = rdr["Description"].ToString();
+                        }
+                    }
+					col.IsComputed=((int)rdr["IsComputed"])==1;
 					col.IsNullable=rdr["IsNullable"].ToString()=="YES";
 					col.IsAutoIncrement=((int)rdr["IsIdentity"])==1;
 					result.Add(col);
@@ -654,21 +685,27 @@ class SqlServerSchemaReader : SchemaReader
 		WHERE TABLE_TYPE='BASE TABLE' OR TABLE_TYPE='VIEW'";
 
 	const string COLUMN_SQL=@"SELECT 
-			TABLE_CATALOG AS [Database],
-			TABLE_SCHEMA AS Owner, 
-			TABLE_NAME AS TableName, 
-			COLUMN_NAME AS ColumnName, 
-			ORDINAL_POSITION AS OrdinalPosition, 
-			COLUMN_DEFAULT AS DefaultSetting, 
-			IS_NULLABLE AS IsNullable, DATA_TYPE AS DataType, 
-			CHARACTER_MAXIMUM_LENGTH AS MaxLength, 
-			DATETIME_PRECISION AS DatePrecision,
-			COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') AS IsIdentity,
-			COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') as IsComputed
-		FROM  INFORMATION_SCHEMA.COLUMNS
+			c.TABLE_CATALOG AS [Database],
+			c.TABLE_SCHEMA AS Owner, 
+			c.TABLE_NAME AS TableName, 
+			c.COLUMN_NAME AS ColumnName, 
+			c.ORDINAL_POSITION AS OrdinalPosition, 
+			c.COLUMN_DEFAULT AS DefaultSetting, 
+			c.IS_NULLABLE AS IsNullable, DATA_TYPE AS DataType, 
+			c.CHARACTER_MAXIMUM_LENGTH AS MaxLength, 
+			c.DATETIME_PRECISION AS DatePrecision,
+			COLUMNPROPERTY(object_id('[' + c.TABLE_SCHEMA + '].[' + c.TABLE_NAME + ']'), c.COLUMN_NAME, 'IsIdentity') AS IsIdentity,
+			COLUMNPROPERTY(object_id('[' + c.TABLE_SCHEMA + '].[' + c.TABLE_NAME + ']'), c.COLUMN_NAME, 'IsComputed') as IsComputed,
+			s.value AS [Description]
+		FROM  INFORMATION_SCHEMA.COLUMNS c
+			LEFT JOIN  sys.columns c2 ON
+				c2.object_id = OBJECT_ID(c.TABLE_SCHEMA+'.'+c.TABLE_NAME) AND c2.name = c.COLUMN_NAME
+			LEFT JOIN  sys.extended_properties s ON
+					s.major_id = c2.object_id
+					AND s.minor_id = c2.column_id
+					AND s.name = 'MS_Description'
 		WHERE TABLE_NAME=@tableName AND TABLE_SCHEMA=@schemaName
 		ORDER BY OrdinalPosition ASC";
-	  
 }
 
 class SqlServerCeSchemaReader : SchemaReader
@@ -695,7 +732,8 @@ class SqlServerCeSchemaReader : SchemaReader
 					Table tbl=new Table();
 					tbl.Name=rdr["TABLE_NAME"].ToString();
 					tbl.CleanName=CleanUp(tbl.Name);
-					tbl.ClassName=Inflector.MakeSingular(tbl.CleanName);
+					//tbl.ClassName=Inflector.MakeSingular(tbl.CleanName);
+					tbl.ClassName=tbl.CleanName;
 					tbl.Schema=null;
 					tbl.IsView=false;
 					result.Add(tbl);
@@ -883,7 +921,8 @@ class PostGreSqlSchemaReader : SchemaReader
 					tbl.Schema=rdr["table_schema"].ToString();
 					tbl.IsView=string.Compare(rdr["table_type"].ToString(), "View", true)==0;
 					tbl.CleanName=CleanUp(tbl.Name);
-					tbl.ClassName=Inflector.MakeSingular(tbl.CleanName);
+					//tbl.ClassName=Inflector.MakeSingular(tbl.CleanName);
+					tbl.ClassName=tbl.CleanName;
 					result.Add(tbl);
 				}
 			}
@@ -1054,7 +1093,8 @@ class MySqlSchemaReader : SchemaReader
 					tbl.Schema=rdr["TABLE_SCHEMA"].ToString();
 					tbl.IsView=string.Compare(rdr["TABLE_TYPE"].ToString(), "View", true)==0;
 					tbl.CleanName=CleanUp(tbl.Name);
-					tbl.ClassName=Inflector.MakeSingular(tbl.CleanName);
+					//tbl.ClassName=Inflector.MakeSingular(tbl.CleanName);
+					tbl.ClassName=tbl.CleanName;
 					result.Add(tbl);
 				}
 			}
@@ -1182,7 +1222,8 @@ class OracleSchemaReader : SchemaReader
 					tbl.Schema = rdr["TABLE_SCHEMA"].ToString();
 					tbl.IsView=string.Compare(rdr["TABLE_TYPE"].ToString(), "View", true)==0;
 					tbl.CleanName=CleanUp(tbl.Name);
-					tbl.ClassName=Inflector.MakeSingular(tbl.CleanName);
+					//tbl.ClassName=Inflector.MakeSingular(tbl.CleanName);
+					tbl.ClassName=tbl.CleanName;
 					result.Add(tbl);
 				}
 			}

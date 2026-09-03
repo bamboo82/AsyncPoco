@@ -118,9 +118,24 @@ namespace AsyncPoco
             EnableAutoSelect = true;
             EnableNamedParams = true;
 
-            // If a provider name was supplied, get the DbProviderFactory for it
+            // If a provider name was supplied, get the DbProviderFactory for it.
+            // NOTE (.NET Core / .NET 5+): DbProviderFactories has no registered providers by default.
+            // The host must call DbProviderFactories.RegisterFactory(providerName, factory) at startup,
+            // or use the Database(string, DbProviderFactory) / Database(DbConnection) constructors instead.
             if (_providerName != null)
-                _factory = DbProviderFactories.GetFactory(_providerName);
+            {
+                try
+                {
+                    _factory = DbProviderFactories.GetFactory(_providerName);
+                }
+                catch (ArgumentException ex)
+                {
+                    throw new InvalidOperationException(
+                        "No DbProviderFactory is registered for provider '" + _providerName + "'. " +
+                        "On .NET Core/.NET 5+ call DbProviderFactories.RegisterFactory(\"" + _providerName + "\", <factory>) at startup, " +
+                        "or construct Database with a DbProviderFactory or an open DbConnection.", ex);
+                }
+            }
 
             // Resolve the DB Type
             string DBTypeName = (_factory == null ? _sharedConnection.GetType() : _factory.GetType()).Name;
@@ -2045,6 +2060,7 @@ namespace AsyncPoco
         /// <param name="cb">A callback function to connect the POCO instances, or null to automatically guess the relationships</param>
         /// <param name="sql">An SQL builder object representing the query and it's arguments</param>
         /// <returns>A collection of POCO's as a List</returns>
+        public Task<List<TRet>> FetchAsync<T1, TRet>(Func<T1, TRet> cb, Sql sql) { return FetchAsync<TRet>(new[] { typeof(T1) }, cb, sql.SQL, sql.Arguments); }
         public Task<List<TRet>> FetchAsync<T1, T2, TRet>(Func<T1, T2, TRet> cb, Sql sql) { return FetchAsync<TRet>(new[] { typeof(T1), typeof(T2) }, cb, sql.SQL, sql.Arguments); }
         public Task<List<TRet>> FetchAsync<T1, T2, T3, TRet>(Func<T1, T2, T3, TRet> cb, Sql sql) { return FetchAsync<TRet>(new[] { typeof(T1), typeof(T2), typeof(T3) }, cb, sql.SQL, sql.Arguments); }
         public Task<List<TRet>> FetchAsync<T1, T2, T3, T4, TRet>(Func<T1, T2, T3, T4, TRet> cb, Sql sql) { return FetchAsync<TRet>(new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4) }, cb, sql.SQL, sql.Arguments); }

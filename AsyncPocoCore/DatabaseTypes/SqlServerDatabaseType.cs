@@ -13,13 +13,8 @@ namespace AsyncPoco.DatabaseTypes
 {
 	class SqlServerDatabaseType : DatabaseType
 	{
-
-
-
-
         public override string BuildPageQuery(long skip, long take, PagingHelper.SQLParts parts, ref object[] args)
 		{
-
             /* all sql */
             //{
             //    parts.sqlSelectRemoved = PagingHelper.rxOrderBy.Replace(parts.sqlSelectRemoved, "", 1);
