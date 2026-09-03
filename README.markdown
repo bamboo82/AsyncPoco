@@ -21,6 +21,7 @@ Instead of using "DBContext.query," it now allows the alternative "entity.Save(D
 1. Don't use combo primary-keys. (support is complex and weak)
 2. Each thread manage its own shared context. Read/write may happen at shared context. If you need transaction, create a dedicated new context for it.
 3. On .NET 9 construct `Database` with a `DbConnection` or a `DbProviderFactory`; the provider-name constructor requires `DbProviderFactories.RegisterFactory(...)` at startup. See `docs/PORTING-NET9.md`.
+4. Be aware IsolationLevel status is reused in SQL Server, and varies from SQL connectors. as it may escape wildly, perhaps it is BETTER to reset it upon new connect.
 
 ## For maintainers / AI sessions
 Start with `CLAUDE.md`, then `docs/STATUS.md`.
