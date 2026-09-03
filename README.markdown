@@ -1,4 +1,4 @@
-# AsyncPoco (Bamboo edition)
+# AsyncPoco (BambooMod)
 
 ## What's AsyncPoco
 
