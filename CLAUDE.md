@@ -1,4 +1,4 @@
-# AsyncPoco (Bamboo fork) — session guide
+# AsyncPoco (BambooMod) — session guide
 
 Read this first. Then read `docs/STATUS.md` for where things stand. Open other docs only when needed.
 
@@ -35,6 +35,7 @@ Verify parity: `diff -rq AsyncPoco AsyncPocoCore -x bin -x obj -x .vs` should li
 - The `<summary>` comments on most `Attributes/Special/*` are copy-paste garbage ("marks the property maxlength"). Read the class body, not the summary.
 - Build output is Traditional Chinese (`建置成功` = build succeeded, `錯誤` = error).
 - Version lives in `Properties/AssemblyInfo.cs` (both trees, same file). `GenerateAssemblyInfo` is off.
+- SQL Server reuses a pooled connection's `IsolationLevel`, and connectors differ; after `GetTransactionAsync(IsolationLevel)` the level can leak into later work on that connection. README precaution #4. Consider resetting it on a fresh connection.
 
 ## Docs
 - `docs/STATUS.md` — dated state + next steps. Update it at the end of every session that changes code.
