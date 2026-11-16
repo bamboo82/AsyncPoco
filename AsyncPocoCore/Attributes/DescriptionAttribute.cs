@@ -7,8 +7,7 @@ using System;
 namespace AsyncPoco
 {
 	/// <summary>
-	/// For explicit poco properties, marks the property maxlength
-	/// null if not determined or appliable
+	/// Human-readable table/column description; the T4 generator emits it from the DB schema. Never read by the ORM.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Class)]
 	public class DescriptionAttribute : Attribute

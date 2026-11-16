@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace AsyncPoco.Attributes.Special
 {
+    /// <summary>
+    /// Fork-only UI metadata, never read by the ORM. The 4-arg ctor passes recieveAs/redirectTo swapped into the long ctor; existing consumers may depend on it.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
     public class ReferenceToPassiveAttribute : Attribute
     {

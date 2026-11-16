@@ -8,8 +8,7 @@ using System.Collections.Generic;
 namespace AsyncPoco
 {
 	/// <summary>
-	/// For explicit poco properties, marks the property maxlength
-	/// null if not determined or appliable
+	/// Fork-only UI metadata, never read by the ORM: IsReadonly flag for the admin UI (default true).
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
 	public class ReadonlyAttribute : Attribute

@@ -7,8 +7,7 @@ using System;
 namespace AsyncPoco
 {
 	/// <summary>
-	/// For explicit poco properties, marks the property maxlength
-	/// null if not determined or appliable
+	/// Fork-only UI metadata, never read by the ORM: free-text note (Tag, Text) attached to the property. Repeatable. Also used by Bamboo.Commenter.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
 	public class MemoAttribute : Attribute

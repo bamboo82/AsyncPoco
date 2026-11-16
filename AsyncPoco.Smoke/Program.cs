@@ -1,4 +1,4 @@
-// Smoke test for AsyncPocoCore on .NET 9 using in-memory SQLite.
+// Smoke test for AsyncPocoCore on .NET 10 using in-memory SQLite.
 // Exercises: connection via DbConnection ctor, DDL, InsertAsync (auto-increment PK),
 // SingleAsync, FetchAsync, UpdateAsync, PageAsync, ExistsAsync, DeleteAsync,
 // transactions (commit + rollback), and the .NET Core provider-factory guard.
@@ -36,7 +36,7 @@ namespace AsyncPoco.Smoke
 
         private static async Task<int> Main()
         {
-            Console.WriteLine("AsyncPocoCore smoke test (net9.0, Microsoft.Data.Sqlite in-memory)");
+            Console.WriteLine("AsyncPocoCore smoke test (net10.0, Microsoft.Data.Sqlite in-memory)");
 
             // :memory: databases live only as long as the connection, so open it ourselves and hand it
             // to the Database(DbConnection) constructor (which never closes an external connection).

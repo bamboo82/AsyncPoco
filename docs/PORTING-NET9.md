@@ -32,3 +32,6 @@ dotnet run --project AsyncPoco.Smoke                            # expect: ALL CH
 - `AsyncPoco.DevBed`, `csj` — legacy, untouched.
 - No multi-targeting; two projects remain by owner decision. Keep them in sync with the command in `CLAUDE.md`.
 - No NuGet packaging for net9 (`AsyncPoco.nuspec` still says `lib\net45`).
+
+## 2026-11-16: retargeted to net10.0
+`AsyncPocoCore/` and `AsyncPoco.Smoke/` moved from `net9.0` to `net10.0`; packages 9.0.0 → 10.0.0. No source change was needed and the smoke test passes 14/14. Everything above that says net9 applies unchanged to net10 (same `DbProviderFactories` behaviour).

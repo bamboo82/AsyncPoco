@@ -8,8 +8,7 @@ using System.Collections.Generic;
 namespace AsyncPoco
 {
 	/// <summary>
-	/// For explicit poco properties, marks the property maxlength
-	/// null if not determined or appliable
+	/// Fork-only UI metadata, never read by the ORM: names a custom editor/type (TypeName) for the property.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
 	public class CustomizedTypeAttribute : Attribute

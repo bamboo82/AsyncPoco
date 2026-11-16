@@ -2,6 +2,18 @@
 
 Newest first. One entry per session that changes code. Keep entries short; details go in the other docs.
 
+## 2026-11-16 — AsyncPocoCore retargeted to net10.0
+- `AsyncPocoCore/` and `AsyncPoco.Smoke/` now target `net10.0` (was net9.0) so they match Visual Studio 2026. Csproj-only change; no source edits. `AsyncPoco/` stays net48.
+- Packages bumped 9.0.0 → 10.0.0: `System.Configuration.ConfigurationManager`, `Microsoft.Data.Sqlite` (smoke only).
+- Verified with SDK 10.0.401: net48 build 0 errors, net10 build 0 errors, smoke 14/14. Real output is `AsyncPocoCore/bin/<Config>/net10.0/AsyncPoco.dll`.
+- Open: smoke test restore warns NU1903 (GHSA-2m69-gcr7-jv3q) on transitive `SQLitePCLRaw.lib.e_sqlite3` 2.1.11. Test-only dependency; the library does not reference it.
+- Older entries below say net9; read them as history.
+
+## 2026-10-09 — comment/doc cleanup to cut future reading
+- Replaced the wrong copy-pasted `<summary>` ("marks the property maxlength") on 10 attribute files (8 under `Attributes/Special/`, plus `MaxLength`, `Description`) with accurate one-liners; added summaries to `ReferenceByAttribute.cs` / `ReferenceToPassiveAttribute.cs` noting the class/file name mismatch and the swapped-arg ctor quirk. Comments only, no behaviour change. Synced to `AsyncPocoCore/`; both builds clean, smoke 14/14.
+- `docs/ARCHITECTURE.md`: full ctor table for every `Attributes/Special/*` attribute (no need to open the files); corrected two false claims — the ORM never reads `MaxLength`/`Required`/Special attributes, and `ExceedMaxLengthException` is never thrown by the library.
+- `CLAUDE.md` gotcha updated accordingly.
+
 ## 2026-09-11 — docs sync
 - README renamed the project title to "AsyncPoco (BambooMod)" (commit 2fb6f5d) and added precaution #4 on SQL Server `IsolationLevel` reuse (commit 020970b). `CLAUDE.md` gotchas now carry the same warning.
 - No code change. Both csproj targets confirmed: `AsyncPoco/` net48, `AsyncPocoCore/` net9.0. Owner reconfirmed: only `AsyncPocoCore/` targets net9.

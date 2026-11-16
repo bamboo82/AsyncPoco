@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace AsyncPoco.Attributes.Special
 {
+    /// <summary>
+    /// Fork-only UI metadata, never read by the ORM: reverse lookup (FromFieldName shown AsFieldName within LookupGroup). Repeatable.
+    /// NOTE: file is ReferenceByAttribute.cs but the class is ReferenceByPassiveAttribute.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
     public class ReferenceByPassiveAttribute : Attribute
     {

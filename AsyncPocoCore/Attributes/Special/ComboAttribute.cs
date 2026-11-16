@@ -7,8 +7,7 @@ using System;
 namespace AsyncPoco
 {
 	/// <summary>
-	/// For explicit poco properties, marks the property maxlength
-	/// null if not determined or appliable
+	/// Fork-only UI metadata, never read by the ORM: render the property as a drop-down whose options are the [ComboOption]s on it.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property)]
 	public class ComboAttribute : Attribute

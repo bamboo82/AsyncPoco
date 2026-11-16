@@ -1,6 +1,6 @@
 # Architecture
 
-Applies to both `AsyncPoco/` (net48) and `AsyncPocoCore/` (net9.0); the source is identical.
+Applies to both `AsyncPoco/` (net48) and `AsyncPocoCore/` (net10.0); the source is identical.
 Namespace is `AsyncPoco` (public) and `AsyncPoco.Internal` / `AsyncPoco.DatabaseTypes` (internals).
 
 ## File map
@@ -20,10 +20,10 @@ Namespace is `AsyncPoco` (public) and `AsyncPoco.Internal` / `AsyncPoco.Database
 | `Utilities/PagingHelper.cs` | | Regex split of a SELECT into parts for count/page query generation. |
 | `Utilities/ParametersHelper.cs` | | `@0`, `@name`, `@@literal` parameter expansion; `IEnumerable` args expand to lists. |
 | `Utilities/Cache.cs`, `ArrayKey.cs`, `Singleton.cs`, `EnumMapper.cs`, `AutoSelectHelper.cs` | | Caches and helpers. |
-| `Attributes/*.cs` | | Standard PetaPoco attributes: `TableName`, `PrimaryKey`, `Column`, `ResultColumn`, `ComputedColumn`, `Ignore`, `ExplicitColumns`, plus fork additions `MaxLength`, `Description`. |
+| `Attributes/*.cs` | | Standard PetaPoco attributes: `TableName`, `PrimaryKey`, `Column`, `ResultColumn`, `ComputedColumn`, `Ignore`, `ExplicitColumns`. Fork additions `MaxLength(string)`, `Description(string)` are emitted by the T4 generator from the DB schema and **never read by the ORM**. |
 | `Attributes/Special/*.cs` | | **Fork-only UI/metadata attributes** (see below). |
-| `Exceptions/ExceedMaxLengthException.cs` | | Thrown on insert/update when a `[MaxLength]` string is too long. |
-| `OracleProvider.cs` | | Reflection-based Oracle factory shim (`Assembly.Load`). Framework-era; untested on net9. |
+| `Exceptions/ExceedMaxLengthException.cs` | | `(fieldName, maxLength)`. Defined only; **never thrown by this library**. Reserved for consumers that validate `[MaxLength]` themselves. |
+| `OracleProvider.cs` | | Reflection-based Oracle factory shim (`Assembly.Load`). Framework-era; untested on net9/net10. |
 | `T4 Templates/` | | Design-time code generation (see below). Not compiled. |
 | `HashCodeCombiner.cs` | | Hash helper used by combo-PK keys. |
 
@@ -38,7 +38,30 @@ Insert goes through `_dbType.ExecuteInsertAsync` (dialect-specific identity retr
 ## Fork-specific pieces
 - **`entity.SaveAsync()` / `Repo.GetInstance()` pattern** described in README lives in *generated* code (`T4 Templates/AsyncPoco.Generator.ttinclude`), not in this library: the T4 emits `partial class <RepoName> : Database` with a static `GetInstance()` factory, a nested `Record<T>` base with `SaveAsync()`/`SaveAsync(Database)`, and a `partial class` per table/view.
 - **Combo (composite) primary keys**: `PrimaryKeyAttribute` accepts comma-separated columns; `Core/TableInfo` + `ArrayKey`/`HashCodeCombiner` handle them. README warns support is weak.
-- **`Attributes/Special/*`**: `Combo`, `ComboOption`, `CustomizedType`, `DateType`, `FileType`, `Memo`, `MultiReferenceTo`, `Orderable`, `DefaultOrderable`, `QuickSearchableGroup`, `Readonly`, `ReferenceBy`, `ReferenceTo`, `ReferenceToPassive`, `Required`, `SearchableGroup`, `Suggestable`, `TableHideAll/Field`, `TableShowAll/Field`. These carry admin-UI metadata for the owner's CMS generator; the ORM itself only reads `MaxLength`/`Required`-style checks in insert/update. Their `<summary>` XML comments are mostly wrong copy-paste; read the class body.
+- **`Attributes/Special/*`**: admin-UI metadata for the owner's CMS generator (and `Bamboo.Commenter`, which reflects on `Required`/`Memo`). **The ORM never reads any of them.** Each file is a plain data-holder attribute; the table below is complete, so there is no need to open the files. `×n` = `AllowMultiple`. `Enum_*` are nested sealed "enum classes" whose `NONE`/`DEFAULT_NONE` member is `null`.
+
+| Attribute | Namespace | Targets | Ctor / data |
+|---|---|---|---|
+| `Combo` | `AsyncPoco` | Property | none; drop-down whose options are the `ComboOption`s |
+| `ComboOption` ×n | `AsyncPoco` | Property | `(object key, string value[, bool isDefault])` |
+| `CustomizedType` | `AsyncPoco` | Property | `(string type)` → `TypeName` |
+| `DateType` | `AsyncPoco` | Property | `([bool isDateType = true])` |
+| `FileTypePassive` (file `FileTypeAttribute.cs`) | `AsyncPoco` | Property | `(lookupGroup, recieveAsFieldName, redirectToFieldName, tag[, isRequired, isReadonly, isVisible, shouldSave])` |
+| `Memo` ×n | `AsyncPoco` | Property | `(string tag, string text)` |
+| `Readonly`, `Required` | `AsyncPoco` | Property | `([bool = true])` → `IsReadonly` / `IsRequired` |
+| `Orderable`, `DefaultOrderable` | `AsyncPoco.Attributes.Special` | Property, Class | `(Enum_FieldRole DEFAULT_NONE/DEFAULT_ASC/DEFAULT_DESC)`; `DefaultOrderable` adds `Value` = `"asc"`/`"desc"` |
+| `MultiReferenceTo` | same | Property | `(tableName, fieldName)`; `FieldRole` (`COMMA_SEPERATED`) settable |
+| `ReferenceTo` | same | Property | `(foreignTable, foreignField[, lookupGroup, int behavior])`; behavior 1 = `SINGLE_LOOKUP` (default), 2 = `MULTI_LOOKUP` |
+| `ReferenceToPassive` ×n | same | Property | `(lookupGroup, recieveAsFieldName, redirectToFieldName, tag[, isRequired, isReadonly, isVisible, shouldSave, isLookupable])` |
+| `ReferenceByPassive` ×n (file `ReferenceByAttribute.cs`) | same | Property | `(lookupGroup, fromFieldName, asFieldName, tag)` |
+| `SearchableGroup` ×n, `QuickSearchableGroup` | same | Property | `(groupName, groupOrderIndex, fieldOrderIndex, description[, Enum_FieldRole])`; only `NONE` exists |
+| `Suggestable` | same | Property | `(groupName, Enum_FieldRole NONE/AS_KEY/AS_UNIQUE_KEY)` |
+| `TableShowAll`, `TableHideAll` ×n | same | Property, Class | none |
+| `TableShowField`, `TableHideField` ×n | same | Property, Class | `(string fieldName)` |
+
+  Consumers (reflect on these attributes): `CMSWebConsole/Program.cs` in `X:\P5\CMS`, `X:\P5\Bob\House\web`, `X:\P5\Inject\Panel`; `X:\P5\Wall\WallWebConsole/Program.cs`; `Bamboo.Commenter.ChatServer/CustomSocket/Base/Base_Params.cs` (`Required`).
+
+  Quirk, do not "fix": in `FileTypePassive` and `ReferenceToPassive` the 4-arg ctor forwards `recieveAs`/`redirectTo` swapped into the long ctor. Consumers may depend on it.
 - **`.ConfigureAwait(false)`** on every internal await (commit ee09632). Keep it that way when adding awaits.
 
 ## T4 templates (`T4 Templates/`)

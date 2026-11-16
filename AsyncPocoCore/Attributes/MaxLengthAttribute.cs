@@ -7,8 +7,7 @@ using System;
 namespace AsyncPoco
 {
 	/// <summary>
-	/// For explicit poco properties, marks the property maxlength
-	/// null if not determined or appliable
+	/// Column max length as a string; the T4 generator emits it from the DB schema. Not enforced by the ORM (ExceedMaxLengthException is only defined, never thrown here).
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property)]
 	public class MaxLengthAttribute : Attribute

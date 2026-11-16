@@ -8,8 +8,7 @@ using System.Collections.Generic;
 namespace AsyncPoco
 {
 	/// <summary>
-	/// For explicit poco properties, marks the property maxlength
-	/// null if not determined or appliable
+	/// Fork-only validation metadata, never read by the ORM: IsRequired flag (default true). Consumers (Bamboo.Commenter, CMS generator) reflect on it themselves.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
 	public class RequiredAttribute : Attribute
