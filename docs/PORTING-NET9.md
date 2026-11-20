@@ -35,3 +35,6 @@ dotnet run --project AsyncPoco.Smoke                            # expect: ALL CH
 
 ## 2026-11-16: retargeted to net10.0
 `AsyncPocoCore/` and `AsyncPoco.Smoke/` moved from `net9.0` to `net10.0`; packages 9.0.0 → 10.0.0. No source change was needed and the smoke test passes 14/14. Everything above that says net9 applies unchanged to net10 (same `DbProviderFactories` behaviour).
+
+## 2026-11-20: merged into one multi-target project
+`AsyncPocoCore/` and `AsyncPocoCore.sln` were deleted. `AsyncPoco/AsyncPoco.csproj` now has `<TargetFrameworks>net48;net10.0</TargetFrameworks>` and `AsyncPoco.Smoke` references it. Read every `AsyncPocoCore/...` path above as `AsyncPoco/...`; the sync procedure no longer exists. The net10 DLL is at `AsyncPoco/bin/<Config>/net10.0/AsyncPoco.dll`.

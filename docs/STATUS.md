@@ -2,6 +2,15 @@
 
 Newest first. One entry per session that changes code. Keep entries short; details go in the other docs.
 
+## 2026-11-20 — AsyncPoco + AsyncPocoCore merged into one multi-target project
+- `AsyncPoco/AsyncPoco.csproj` now targets `net48;net10.0`. `AsyncPocoCore/` and `AsyncPocoCore.sln` deleted; no more sync step. Owner reversed the 2026-09-04 two-project decision.
+- Csproj cleanup: dead FxCop/x64/GenerateTemplate groups removed; `Platform=x86` default removed (it never affected the DLL, which was AnyCPU); `CMSWebConsole-Only` configuration kept.
+- New `AsyncPoco.Modern.sln` (AsyncPoco + AsyncPoco.Smoke). Legacy `AsyncPoco.sln` untouched.
+- Verified: `dotnet build` 0 errors on both targets (Debug and Release), smoke 14/14, VS 2026 MSBuild 18.11 builds the new solution.
+- Not working, pre-existing: `AsyncPocoPioneer` (net461) and `Bamboo.Commenter.ChatServer` (net472) cannot project-reference a net48 library; same error with the pre-merge csproj.
+- New constraint: VS 2022 MSBuild cannot build this project any more (NETSDK1045, it only has SDK 9).
+- Entries below that mention `AsyncPocoCore/` are history.
+
 ## 2026-11-16 — AsyncPocoCore retargeted to net10.0
 - `AsyncPocoCore/` and `AsyncPoco.Smoke/` now target `net10.0` (was net9.0) so they match Visual Studio 2026. Csproj-only change; no source edits. `AsyncPoco/` stays net48.
 - Packages bumped 9.0.0 → 10.0.0: `System.Configuration.ConfigurationManager`, `Microsoft.Data.Sqlite` (smoke only).

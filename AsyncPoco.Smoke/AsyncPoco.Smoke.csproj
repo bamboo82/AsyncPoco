@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Smoke test for the net10 build (AsyncPocoCore). No DB server needed: uses in-memory SQLite.
+    Smoke test for the net10.0 target of AsyncPoco. No DB server needed: uses in-memory SQLite.
     Run:  dotnet run (with -p or /project) pointing at AsyncPoco.Smoke
     Exit code 0 = all checks passed. See docs/PORTING-NET9.md.
   -->
@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AsyncPocoCore\AsyncPocoCore.csproj" />
+    <ProjectReference Include="..\AsyncPoco\AsyncPoco.csproj" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0" />
   </ItemGroup>
 

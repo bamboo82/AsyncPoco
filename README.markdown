@@ -8,8 +8,8 @@ AsyncPoco is a fork of the popular [PetaPoco](http://www.toptensoftware.com/peta
 This project is forked from https://github.com/tmenier/AsyncPoco in 2016
 
 ## Tested .NET versions
-- .NET Framework 4.8 (`AsyncPoco/`)
-- .NET 10 (`AsyncPocoCore/`, verified by `AsyncPoco.Smoke` on in-memory SQLite)
+- .NET Framework 4.8 and .NET 10, both built from `AsyncPoco/AsyncPoco.csproj` (multi-target; needs .NET SDK 10 / Visual Studio 2026)
+- The .NET 10 build is verified by `AsyncPoco.Smoke` on in-memory SQLite)
 
 ## Is it faster?
 Perhaps, you can spawn multiple thread and use async Task queue.

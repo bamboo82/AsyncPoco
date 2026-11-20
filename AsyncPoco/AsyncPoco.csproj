@@ -1,56 +1,43 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    AsyncPoco (BambooMod): one project, two targets.
+      net48   - consumed by X:\P5\AsyncPocoPioneer and X:\P5\Bamboo.Commenter (project references to this file).
+      net10.0 - modern build; verified by ../AsyncPoco.Smoke.
+    Output: bin\<Config>\<tfm>\AsyncPoco.dll. See docs/PORTING-NET9.md.
+  -->
+
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <TargetFrameworks>net48;net10.0</TargetFrameworks>
     <OutputType>Library</OutputType>
+    <AssemblyName>AsyncPoco</AssemblyName>
+    <RootNamespace>AsyncPoco</RootNamespace>
     <Configurations>CMSWebConsole-Only;Debug;Release</Configurations>
-    <!-- Disables the automatic generation of assembly info attributes -->
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <!-- Properties/AssemblyInfo.cs carries the version for both targets. -->
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <!-- Linq/ is dead code and AsyncPoco.cs is the old single-file bundle; never compile either. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);Linq\**;AsyncPoco.cs</DefaultItemExcludes>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <CodeAnalysisLogFile>bin\Debug\AsyncPoco.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
-    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
-    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
-    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
-    <Optimize>true</Optimize>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <CodeAnalysisLogFile>bin\Release\AsyncPoco.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
-    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
-    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
-    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
-    <DocumentationFile>bin\Release\AsyncPoco.xml</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'GenerateTemplate|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\GenerateTemplate\</OutputPath>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <OutputPath>bin\x64\Debug\</OutputPath>
-    <Optimize>true</Optimize>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>bin\x64\Release\</OutputPath>
-    <DocumentationFile>bin\Release\AsyncPoco.xml</DocumentationFile>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'GenerateTemplate|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\GenerateTemplate\</OutputPath>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <ItemGroup>
+
+  <!-- ConfigurationManager.ConnectionStrings for Database(string connectionStringName). -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <Reference Include="System.configuration" />
   </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.0" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Update="AsyncPoco.nuspec">
       <SubType>Designer</SubType>
@@ -58,14 +45,12 @@
     <None Update="T4 Templates\Database.tt">
       <LastGenOutput>Database.cs</LastGenOutput>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
-  </ItemGroup>
-  <ItemGroup>
     <None Update="T4 Templates\StoredProcedures.tt">
       <LastGenOutput>StoredProcedures.cs</LastGenOutput>
     </None>
   </ItemGroup>
-  <PropertyGroup />
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+
 </Project>

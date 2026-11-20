@@ -1,6 +1,6 @@
 # Architecture
 
-Applies to both `AsyncPoco/` (net48) and `AsyncPocoCore/` (net10.0); the source is identical.
+One source tree, `AsyncPoco/`, compiled for net48 and net10.0.
 Namespace is `AsyncPoco` (public) and `AsyncPoco.Internal` / `AsyncPoco.DatabaseTypes` (internals).
 
 ## File map
