@@ -1574,7 +1574,7 @@ namespace AsyncPoco
                             );
 
                             // Execute and getback inserted id value
-                            object id = await _dbType.ExecuteInsertAsync(this, cmd, primaryKeyName);
+                            object id = await _dbType.ExecuteInsertAsync(this, cmd, primaryKeyName).ConfigureAwait(false);
 
                             // Assign the ID back to the primary key property
                             if (primaryKeyName != null)
@@ -2211,7 +2211,7 @@ namespace AsyncPoco
         public async Task<List<TRet>> FetchAsync<TRet>(Type[] types, object cb, string sql, params object[] args)
         {
             var list = new List<TRet>();
-            await QueryAsync<TRet>(types, cb, sql, args, list.Add);
+            await QueryAsync<TRet>(types, cb, sql, args, list.Add).ConfigureAwait(false);
             return list;
         }
 

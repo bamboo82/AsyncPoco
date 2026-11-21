@@ -2,6 +2,13 @@
 
 Newest first. One entry per session that changes code. Keep entries short; details go in the other docs.
 
+## 2026-11-21 — ConfigureAwait(false) gaps closed
+- Reported by the web_headline session; re-verified here with a statement-level scan of all 71 awaits under `AsyncPoco/`.
+- Library: three awaits lacked it and now have it: `Database.cs` auto-increment `InsertAsync` (`_dbType.ExecuteInsertAsync`), multi-poco `FetchAsync<TRet>(Type[], ...)`, and `Core/Transaction.cs` `BeginAsync(db, isolationLevel)`. Every library await now ends in `.ConfigureAwait(false)`.
+- Template: the 12 awaits in the generated `Record<T>` methods (`InsertAsync`/`UpdateAsync`/`DeleteAsync`/`SaveAsync` in `AsyncPoco.Generator.ttinclude`) had the same gap; fixed. Consumers keep their own copy of this ttinclude, so their generated code only changes if they copy the template and regenerate.
+- Why: under classic ASP.NET a sync-over-async caller (`.Result`/`.Wait()`) on the request thread would deadlock on these continuations.
+- Verified: both targets 0 errors, smoke 15/15. The smoke test does not cover multi-poco fetch or the isolation-level transaction.
+
 ## 2026-11-21 — Microsoft.Data.SqlClient preferred for SQL Server
 - `Database.cs`: new `TryGetFactory`; `Microsoft.Data.SqlClient` resolved via `DbProviderFactories` or, failing that, reflection on the host's package. Default provider for `Database(connectionStringName)` without `providerName` is now `Microsoft.Data.SqlClient`, falling back to `System.Data.SqlClient` when the package is absent.
 - `Core/DatabaseType.cs`: the dead `"System.Data.SqlClient."` full-name check replaced by short-name checks (`SqlClient*`, `SqlConnection*`). Behaviour unchanged (SQL Server was already the fallback).

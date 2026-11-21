@@ -160,12 +160,12 @@ namespace <#=Namespace #>
 
             public async Task<object> InsertAsync()
             {
-				return await this.InsertAsync(repo);
+				return await this.InsertAsync(repo).ConfigureAwait(false);
 			}
 
 			public async Task<int> DeleteAsync(Database repo)
             {
-				var ret = await repo.DeleteAsync(this);
+				var ret = await repo.DeleteAsync(this).ConfigureAwait(false);
 				return ret;
 			}
 
@@ -174,20 +174,20 @@ namespace <#=Namespace #>
                 if (ModifiedColumns != null)
                 {
                     //VERSION 1: with change tracking
-                    var ret = await repo.InsertAsync(this, ModifiedColumns.Keys);
+                    var ret = await repo.InsertAsync(this, ModifiedColumns.Keys).ConfigureAwait(false);
                     ModifiedColumns.Clear();
                     return ret;
                 }
                 else
                 {
 					//VERSION 2: no change tracking
-					return await repo.InsertAsync(this);
+					return await repo.InsertAsync(this).ConfigureAwait(false);
                 }
 			}
 
 			public async Task<int> UpdateAsync()
             {
-                return await this.UpdateAsync(repo);
+                return await this.UpdateAsync(repo).ConfigureAwait(false);
             }
 
 			public async Task<int> UpdateAsync(Database repo)
@@ -197,7 +197,7 @@ namespace <#=Namespace #>
                     //VERSION 1: with change tracking
                     if (ModifiedColumns.Any())
                     {
-                        var ret = await repo.UpdateAsync(this, ModifiedColumns.Keys);
+                        var ret = await repo.UpdateAsync(this, ModifiedColumns.Keys).ConfigureAwait(false);
                         ModifiedColumns.Clear();
                         return ret;
                     }
@@ -209,13 +209,13 @@ namespace <#=Namespace #>
                 else
                 {
 					//VERSION 2: no change tracking
-                    return await repo.UpdateAsync(this);
+                    return await repo.UpdateAsync(this).ConfigureAwait(false);
                 }
             }
 
             public async Task<object> SaveAsync()
             {
-				return await this.SaveAsync(repo);
+				return await this.SaveAsync(repo).ConfigureAwait(false);
 			}
 
             public async Task<object> SaveAsync(Database repo)
@@ -225,13 +225,13 @@ namespace <#=Namespace #>
                     //VERSION 1: with change tracking
                     if (repo.IsNew(this))
                     {
-                        var ret = await repo.InsertAsync(this, ModifiedColumns.Keys);
+                        var ret = await repo.InsertAsync(this, ModifiedColumns.Keys).ConfigureAwait(false);
                         ModifiedColumns.Clear();
                         return ret;
                     }
                     else
                     {
-                        return await UpdateAsync(repo);
+                        return await UpdateAsync(repo).ConfigureAwait(false);
                     }
                 }
                 else
@@ -239,11 +239,11 @@ namespace <#=Namespace #>
 					//VERSION 2: no change tracking
                     if (repo.IsNew(this))
                     {
-                        return await repo.InsertAsync(this);
+                        return await repo.InsertAsync(this).ConfigureAwait(false);
                     }
                     else
                     {
-                        return await UpdateAsync(repo);
+                        return await UpdateAsync(repo).ConfigureAwait(false);
                     }
                 }
 			}

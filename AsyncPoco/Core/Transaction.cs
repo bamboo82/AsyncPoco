@@ -31,7 +31,7 @@ namespace AsyncPoco
         public static async Task<ITransaction> BeginAsync(Database db, IsolationLevel isolationLevel)
         {
             var trans = new Transaction(db);
-            await db.BeginTransactionAsync(isolationLevel);
+            await db.BeginTransactionAsync(isolationLevel).ConfigureAwait(false);
             return trans;
         }
 
