@@ -90,11 +90,17 @@ namespace AsyncPoco
                 connectionStringName = ConfigurationManager.ConnectionStrings[0].Name;
 
             // Work out connection string and provider name
-            var providerName = "System.Data.SqlClient";
+            // No providerName in config = SQL Server. Prefer Microsoft.Data.SqlClient; CommonConstruct falls back to
+            // System.Data.SqlClient when the host has not referenced the Microsoft.Data.SqlClient package.
+            var providerName = MicrosoftSqlClientProvider;
+            _providerDefaulted = true;
             if (ConfigurationManager.ConnectionStrings[connectionStringName] != null)
             {
                 if (!string.IsNullOrEmpty(ConfigurationManager.ConnectionStrings[connectionStringName].ProviderName))
+                {
                     providerName = ConfigurationManager.ConnectionStrings[connectionStringName].ProviderName;
+                    _providerDefaulted = false;
+                }
             }
             else
             {
@@ -124,16 +130,24 @@ namespace AsyncPoco
             // or use the Database(string, DbProviderFactory) / Database(DbConnection) constructors instead.
             if (_providerName != null)
             {
-                try
+                ArgumentException notRegistered;
+                _factory = TryGetFactory(_providerName, out notRegistered);
+
+                // Provider name was not in config and Microsoft.Data.SqlClient is not available: use the legacy provider.
+                if (_factory == null && _providerDefaulted)
                 {
-                    _factory = DbProviderFactories.GetFactory(_providerName);
+                    ArgumentException ignored;
+                    _factory = TryGetFactory(LegacySqlClientProvider, out ignored);
+                    if (_factory != null)
+                        _providerName = LegacySqlClientProvider;
                 }
-                catch (ArgumentException ex)
+
+                if (_factory == null)
                 {
                     throw new InvalidOperationException(
                         "No DbProviderFactory is registered for provider '" + _providerName + "'. " +
                         "On .NET Core/.NET 5+ call DbProviderFactories.RegisterFactory(\"" + _providerName + "\", <factory>) at startup, " +
-                        "or construct Database with a DbProviderFactory or an open DbConnection.", ex);
+                        "or construct Database with a DbProviderFactory or an open DbConnection.", notRegistered);
                 }
             }
 
@@ -144,6 +158,40 @@ namespace AsyncPoco
 
             // What character is used for delimiting parameters in SQL
             _paramPrefix = _dbType.GetParameterPrefix(_connectionString);
+        }
+
+
+        const string MicrosoftSqlClientProvider = "Microsoft.Data.SqlClient";
+        const string LegacySqlClientProvider = "System.Data.SqlClient";
+
+        // True when Database(connectionStringName) found no providerName in config and assumed SQL Server.
+        bool _providerDefaulted;
+
+        /// <summary>
+        /// DbProviderFactories lookup that returns null instead of throwing. Microsoft.Data.SqlClient is also found
+        /// by reflection when the host references the package but never registered the factory, so SQL Server works
+        /// without a DbProviderFactories entry on both .NET Framework and .NET 5+. No compile-time dependency.
+        /// </summary>
+        static DbProviderFactory TryGetFactory(string providerName, out ArgumentException notRegistered)
+        {
+            notRegistered = null;
+            try
+            {
+                return DbProviderFactories.GetFactory(providerName);
+            }
+            catch (ArgumentException ex)
+            {
+                notRegistered = ex;
+            }
+
+            if (string.Equals(providerName, MicrosoftSqlClientProvider, StringComparison.OrdinalIgnoreCase))
+            {
+                var t = Type.GetType("Microsoft.Data.SqlClient.SqlClientFactory, Microsoft.Data.SqlClient", false);
+                var f = t == null ? null : t.GetField("Instance", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                if (f != null)
+                    return (DbProviderFactory)f.GetValue(null);
+            }
+            return null;
         }
 
         #endregion

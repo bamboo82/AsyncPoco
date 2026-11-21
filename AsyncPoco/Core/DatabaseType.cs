@@ -151,7 +151,8 @@ namespace AsyncPoco.Internal
                         return Singleton<OracleDatabaseType>.Instance;
                 if (TypeName.StartsWith("SQLite", StringComparison.OrdinalIgnoreCase))
                         return Singleton<SQLiteDatabaseType>.Instance;
-                if (TypeName.StartsWith("System.Data.SqlClient.", StringComparison.OrdinalIgnoreCase))
+                // TypeName is the short type name (SqlClientFactory / SqlConnection), same for Microsoft.Data.SqlClient and System.Data.SqlClient.
+                if (TypeName.StartsWith("SqlClient", StringComparison.OrdinalIgnoreCase) || TypeName.StartsWith("SqlConnection", StringComparison.OrdinalIgnoreCase))
                         return Singleton<SqlServerDatabaseType>.Instance;
 			}
 

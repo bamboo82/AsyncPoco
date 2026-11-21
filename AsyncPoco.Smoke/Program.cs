@@ -124,6 +124,17 @@ namespace AsyncPoco.Smoke
                 Check(one == 1, "Database(connStr, providerName) works after DbProviderFactories.RegisterFactory");
             }
 
+            // Microsoft.Data.SqlClient is found by reflection, so no RegisterFactory call is needed. Nothing is opened here.
+            try
+            {
+                using (var db3 = new Database("Server=(local);Database=none;Integrated Security=true;Encrypt=false", "Microsoft.Data.SqlClient"))
+                    Check(true, "Database(connStr, \"Microsoft.Data.SqlClient\") resolves the factory without RegisterFactory");
+            }
+            catch (InvalidOperationException)
+            {
+                Check(false, "Database(connStr, \"Microsoft.Data.SqlClient\") resolves the factory without RegisterFactory");
+            }
+
             Console.WriteLine();
             Console.WriteLine(_failures == 0 ? "ALL CHECKS PASSED" : _failures + " CHECK(S) FAILED");
             return _failures == 0 ? 0 : 1;

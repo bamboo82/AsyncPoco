@@ -2,6 +2,14 @@
 
 Newest first. One entry per session that changes code. Keep entries short; details go in the other docs.
 
+## 2026-11-21 — Microsoft.Data.SqlClient preferred for SQL Server
+- `Database.cs`: new `TryGetFactory`; `Microsoft.Data.SqlClient` resolved via `DbProviderFactories` or, failing that, reflection on the host's package. Default provider for `Database(connectionStringName)` without `providerName` is now `Microsoft.Data.SqlClient`, falling back to `System.Data.SqlClient` when the package is absent.
+- `Core/DatabaseType.cs`: the dead `"System.Data.SqlClient."` full-name check replaced by short-name checks (`SqlClient*`, `SqlConnection*`). Behaviour unchanged (SQL Server was already the fallback).
+- `T4 Templates/StoredProcedures.Generator.ttinclude`: generated code now has `using Microsoft.Data.SqlClient;`. Consumers that regenerate must reference that package.
+- The library itself has no `using System.Data.SqlClient;` and takes no package dependency.
+- Smoke test: +1 check (15 total), `Microsoft.Data.SqlClient` 7.1.2 added to `AsyncPoco.Smoke` only. Verified: both targets 0 errors, smoke 15/15, net48 DLL loaded in Windows PowerShell (explicit `System.Data.SqlClient` ok; explicit `Microsoft.Data.SqlClient` without the package throws the descriptive error).
+- Not tested: a real SQL Server connection, and the defaulted-provider fallback path (needs an app.config host).
+
 ## 2026-11-20 — AsyncPoco + AsyncPocoCore merged into one multi-target project
 - `AsyncPoco/AsyncPoco.csproj` now targets `net48;net10.0`. `AsyncPocoCore/` and `AsyncPocoCore.sln` deleted; no more sync step. Owner reversed the 2026-09-04 two-project decision.
 - Csproj cleanup: dead FxCop/x64/GenerateTemplate groups removed; `Platform=x86` default removed (it never affected the DLL, which was AnyCPU); `CMSWebConsole-Only` configuration kept.

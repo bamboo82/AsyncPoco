@@ -16,7 +16,7 @@ Done 2026-09-04. Result: `AsyncPocoCore/` targets `net9.0`, builds with 0 errors
 | `new Database(connStr, providerName)` | works via machine.config provider list | throws unless host called `DbProviderFactories.RegisterFactory(providerName, XxxFactory.Instance)` first |
 | `new Database(connectionStringName)` | reads app/web.config | reads `<app>.dll.config` via `System.Configuration.ConfigurationManager`; `""` (use first) has no machine.config `LocalSqlServer` fallback |
 | `new Database(DbConnection)` / `new Database(connStr, DbProviderFactory)` | works | works — **preferred on net9** |
-| SQL Server provider | `System.Data.SqlClient` | use `Microsoft.Data.SqlClient` (type names still `SqlConnection`/`SqlClientFactory`, resolves via the SQL Server fallback) |
+| SQL Server provider | `Microsoft.Data.SqlClient` if the host references the package (found by reflection since 2026-11-21), else `System.Data.SqlClient` | `Microsoft.Data.SqlClient`; found by reflection, no `RegisterFactory` needed |
 | SQLite | `System.Data.SQLite` | `Microsoft.Data.Sqlite` verified by the smoke test |
 | Oracle | `OracleProvider.cs` reflection shim | untested; prefer `Oracle.ManagedDataAccess.Core` + `DbProviderFactory` ctor |
 | `Reflection.Emit` (PocoData factories) | works | works (inbox) |
